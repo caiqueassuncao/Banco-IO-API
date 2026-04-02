@@ -1,0 +1,8 @@
+com\banco\service\ContaService.class
+com\banco\exception\GlobalExceptionHandler.class
+com\banco\model\Transacao.class
+com\banco\controller\ContaController.class
+com\banco\repository\ContaRepository.class
+com\banco\model\Conta.class
+com\banco\BancoApplication.class
+com\banco\model\Transacao$Tipo.class

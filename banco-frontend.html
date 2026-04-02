@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banco</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fffdf7;
+    --border: #d4c9b0;
+    --text: #1a1610;
+    --muted: #8a7d65;
+    --accent: #1a1610;
+    --green: #2d6a4f;
+    --red: #9b2335;
+    --yellow: #b8860b;
+    --serif: 'DM Serif Display', serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--text);
+    color: var(--bg);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+  }
+
+  header h1 {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  header span {
+    font-size: 0.7rem;
+    opacity: 0.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: calc(100vh - 72px);
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.05em;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus { border-color: var(--text); }
+
+  .btn {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border-radius: 3px;
+    border: 1px solid var(--text);
+    background: var(--text);
+    color: var(--bg);
+    transition: all 0.15s;
+    margin-top: 0.5rem;
+  }
+
+  .btn:hover { background: #333; }
+  .btn.outline { background: transparent; color: var(--text); }
+  .btn.outline:hover { background: var(--bg); }
+  .btn.danger { background: var(--red); border-color: var(--red); }
+  .btn.danger:hover { background: #7a1c29; }
+
+  /* Contas list */
+  .contas-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .conta-card {
+    padding: 0.9rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .conta-card:hover { border-color: var(--text); }
+  .conta-card.selected { border-color: var(--text); background: var(--text); color: var(--bg); }
+  .conta-card.selected .conta-cpf { color: #aaa; }
+  .conta-card.selected .conta-saldo { color: #c8f135; }
+
+  .conta-titular { font-weight: 500; font-size: 0.9rem; margin-bottom: 0.2rem; }
+  .conta-cpf { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .conta-saldo { font-family: var(--serif); font-size: 1.1rem; color: var(--green); }
+
+  .empty-contas {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  /* Main panel */
+  .main {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .selected-info {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+  }
+
+  .selected-name {
+    font-family: var(--serif);
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .selected-meta {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .selected-saldo {
+    font-family: var(--serif);
+    font-size: 2.5rem;
+    color: var(--green);
+  }
+
+  .ops-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  @media (max-width: 700px) { .ops-grid { grid-template-columns: 1fr; } }
+
+  .op-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+  }
+
+  .op-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  /* Histórico */
+  .historico-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+  }
+
+  .historico-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 1rem;
+  }
+
+  .transacao-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg);
+    border-radius: 3px;
+    font-size: 0.8rem;
+  }
+
+  .t-tipo {
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .t-deposito { background: #d4edda; color: var(--green); }
+  .t-saque { background: #f8d7da; color: var(--red); }
+  .t-transferencia_saida { background: #fff3cd; color: var(--yellow); }
+  .t-transferencia_entrada { background: #d4edda; color: var(--green); }
+
+  .t-desc { color: var(--muted); font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .t-valor { font-weight: 500; white-space: nowrap; }
+  .t-saldo-pos { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+
+  .no-selected {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 400px;
+    color: var(--muted);
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .no-selected-icon { font-family: var(--serif); font-size: 3rem; opacity: 0.2; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: var(--mono);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 999;
+    max-width: 300px;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: var(--green); color: white; }
+  .toast.error { background: var(--red); color: white; }
+
+  select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 0.75rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Banco</h1>
+  <span>API localhost:8082</span>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="section-title">// nova conta</div>
+      <div class="form-group">
+        <label>Titular</label>
+        <input id="new-titular" type="text" placeholder="Nome completo">
+      </div>
+      <div class="form-group">
+        <label>CPF</label>
+        <input id="new-cpf" type="text" placeholder="000.000.000-00">
+      </div>
+      <div class="form-group">
+        <label>Saldo inicial (R$)</label>
+        <input id="new-saldo" type="number" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <button class="btn" onclick="criarConta()">Criar conta</button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-title">// contas</div>
+    </div>
+
+    <div class="contas-list" id="contas-list">
+      <div class="empty-contas">nenhuma conta ainda</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main" id="main-panel">
+    <div class="no-selected">
+      <div class="no-selected-icon">$</div>
+      <div>selecione uma conta para operar</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:8082/api/contas';
+let contas = [];
+let contaSelecionada = null;
+
+async function req(url, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.erro || 'Erro desconhecido');
+  return data;
+}
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+function formatBRL(v) {
+  return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleString('pt-BR');
+}
+
+async function carregarContas() {
+  try {
+    contas = await req(API);
+    renderContas();
+    if (contaSelecionada) {
+      const atualizada = contas.find(c => c.id === contaSelecionada.id);
+      if (atualizada) selecionarConta(atualizada);
+    }
+  } catch(e) {
+    toast('Erro ao carregar contas — API está rodando?', 'error');
+  }
+}
+
+function renderContas() {
+  const el = document.getElementById('contas-list');
+  if (!contas.length) {
+    el.innerHTML = '<div class="empty-contas">nenhuma conta ainda</div>';
+    return;
+  }
+  el.innerHTML = contas.map(c => `
+    <div class="conta-card ${contaSelecionada?.id === c.id ? 'selected' : ''}" onclick="selecionarConta(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+      <div class="conta-titular">${c.titular}</div>
+      <div class="conta-cpf">${c.cpf}</div>
+      <div class="conta-saldo">${formatBRL(c.saldo)}</div>
+    </div>
+  `).join('');
+}
+
+function selecionarConta(conta) {
+  contaSelecionada = conta;
+  renderContas();
+  renderMain();
+  carregarHistorico();
+}
+
+async function carregarHistorico() {
+  if (!contaSelecionada) return;
+  try {
+    const hist = await req(`${API}/${contaSelecionada.id}/historico`);
+    renderHistorico(hist);
+  } catch(e) {}
+}
+
+function renderMain() {
+  if (!contaSelecionada) return;
+  const c = contaSelecionada;
+  const outrasContas = contas.filter(x => x.id !== c.id);
+  const optsTransf = outrasContas.map(x => `<option value="${x.id}">${x.titular}</option>`).join('');
+
+  document.getElementById('main-panel').innerHTML = `
+    <div class="selected-info">
+      <div class="selected-name">${c.titular}</div>
+      <div class="selected-meta">${c.cpf} &nbsp;·&nbsp; ID: ${c.id.substring(0,8)}...</div>
+      <div class="selected-saldo" id="saldo-display">${formatBRL(c.saldo)}</div>
+    </div>
+
+    <div class="ops-grid">
+      <div class="op-card">
+        <div class="op-title">// depositar</div>
+        <label>Valor (R$)</label>
+        <input id="val-dep" type="number" placeholder="0.00" min="0.01" step="0.01">
+        <button class="btn" onclick="depositar()">Depositar</button>
+      </div>
+
+      <div class="op-card">
+        <div class="op-title">// sacar</div>
+        <label>Valor (R$)</label>
+        <input id="val-saq" type="number" placeholder="0.00" min="0.01" step="0.01">
+        <button class="btn outline" onclick="sacar()">Sacar</button>
+      </div>
+
+      <div class="op-card">
+        <div class="op-title">// transferir</div>
+        <label>Destino</label>
+        ${outrasContas.length
+          ? `<select id="sel-destino">${optsTransf}</select>`
+          : `<div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.75rem">crie outra conta primeiro</div>`
+        }
+        <label>Valor (R$)</label>
+        <input id="val-transf" type="number" placeholder="0.00" min="0.01" step="0.01">
+        <button class="btn outline" onclick="transferir()" ${!outrasContas.length ? 'disabled' : ''}>Transferir</button>
+      </div>
+    </div>
+
+    <div class="historico-section">
+      <div class="section-title">// histórico de transações</div>
+      <div class="historico-list" id="historico-list">
+        <div style="color:var(--muted);font-size:0.8rem">carregando...</div>
+      </div>
+    </div>
+
+    <button class="btn danger" style="max-width:200px" onclick="deletarConta()">Deletar conta</button>
+  `;
+}
+
+function renderHistorico(hist) {
+  const el = document.getElementById('historico-list');
+  if (!el) return;
+  if (!hist.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem">nenhuma transação ainda</div>';
+    return;
+  }
+  el.innerHTML = [...hist].reverse().map(t => `
+    <div class="transacao-row">
+      <span class="t-tipo t-${t.tipo.toLowerCase()}">${t.tipo.replace('_', ' ')}</span>
+      <span class="t-desc">${t.descricao}</span>
+      <span class="t-valor">${formatBRL(t.valor)}</span>
+      <span class="t-saldo-pos">saldo: ${formatBRL(t.saldoAposOperacao)}</span>
+    </div>
+  `).join('');
+}
+
+async function criarConta() {
+  const titular = document.getElementById('new-titular').value.trim();
+  const cpf = document.getElementById('new-cpf').value.trim();
+  const saldoInicial = parseFloat(document.getElementById('new-saldo').value) || 0;
+  if (!titular || !cpf) { toast('Preencha titular e CPF', 'error'); return; }
+  try {
+    await req(API, 'POST', { titular, cpf, saldoInicial });
+    document.getElementById('new-titular').value = '';
+    document.getElementById('new-cpf').value = '';
+    document.getElementById('new-saldo').value = '';
+    toast('Conta criada!');
+    carregarContas();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function depositar() {
+  const valor = parseFloat(document.getElementById('val-dep').value);
+  if (!valor || valor <= 0) { toast('Informe um valor válido', 'error'); return; }
+  try {
+    const conta = await req(`${API}/${contaSelecionada.id}/depositar`, 'POST', { valor });
+    contaSelecionada = conta;
+    toast(`Depósito de ${formatBRL(valor)} realizado!`);
+    document.getElementById('val-dep').value = '';
+    document.getElementById('saldo-display').textContent = formatBRL(conta.saldo);
+    carregarContas();
+    carregarHistorico();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function sacar() {
+  const valor = parseFloat(document.getElementById('val-saq').value);
+  if (!valor || valor <= 0) { toast('Informe um valor válido', 'error'); return; }
+  try {
+    const conta = await req(`${API}/${contaSelecionada.id}/sacar`, 'POST', { valor });
+    contaSelecionada = conta;
+    toast(`Saque de ${formatBRL(valor)} realizado!`);
+    document.getElementById('val-saq').value = '';
+    document.getElementById('saldo-display').textContent = formatBRL(conta.saldo);
+    carregarContas();
+    carregarHistorico();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function transferir() {
+  const destinoId = document.getElementById('sel-destino')?.value;
+  const valor = parseFloat(document.getElementById('val-transf').value);
+  if (!destinoId) { toast('Selecione o destino', 'error'); return; }
+  if (!valor || valor <= 0) { toast('Informe um valor válido', 'error'); return; }
+  try {
+    await req(`${API}/${contaSelecionada.id}/transferir`, 'POST', { destinoId, valor });
+    toast(`Transferência de ${formatBRL(valor)} realizada!`);
+    document.getElementById('val-transf').value = '';
+    await carregarContas();
+    carregarHistorico();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deletarConta() {
+  if (!confirm(`Deletar a conta de ${contaSelecionada.titular}?`)) return;
+  try {
+    await req(`${API}/${contaSelecionada.id}`, 'DELETE');
+    toast('Conta deletada.');
+    contaSelecionada = null;
+    document.getElementById('main-panel').innerHTML = `
+      <div class="no-selected">
+        <div class="no-selected-icon">$</div>
+        <div>selecione uma conta para operar</div>
+      </div>`;
+    carregarContas();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+carregarContas();
+setInterval(carregarContas, 10000);
+</script>
+</body>
+</html>
